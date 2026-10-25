@@ -20,8 +20,11 @@ jobs:
           POSTGRES_PASSWORD: credit-demo-local-password
           POSTGRES_DB: credit_test
         ports: ["5432:5432"]
+        # NOTE: the runner joins all container options into one argument string and
+        # only double quotes survive that split, so single quotes here break
+        # "docker create" (unknown shorthand flag: 'U' in -U).
         options: >-
-          --health-cmd 'pg_isready -U credit -d credit_test'
+          --health-cmd "pg_isready -U credit -d credit_test"
           --health-interval 5s --health-timeout 5s --health-retries 12
     env:
       DATABASE_URL: postgresql://credit:credit-demo-local-password@localhost:5432/credit_test
