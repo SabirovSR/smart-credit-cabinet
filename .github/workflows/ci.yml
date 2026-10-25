@@ -166,11 +166,29 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7.0.1
+      - name: Resolve pipeline status
+        id: status
+        env:
+          DEPLOY_RESULT: ${{ needs.deploy.result }}
+          BUILD_RESULT: ${{ needs.build-and-push.result }}
+          QUALITY_RESULT: ${{ needs.quality.result }}
+          E2E_RESULT: ${{ needs.docker-e2e.result }}
+        run: |
+          # A skipped deploy or build means "deployment is disabled", not "deployment broke".
+          # Only jobs that actually ran and failed should turn the status red.
+          status=success
+          for result in "$DEPLOY_RESULT" "$BUILD_RESULT" "$QUALITY_RESULT" "$E2E_RESULT"; do
+            case "$result" in
+              failure | cancelled) status="$result" ;;
+            esac
+          done
+          echo "status=$status" >> "$GITHUB_OUTPUT"
       - name: Telegram status
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          STATUS: ${{ needs.deploy.result }}
+          STATUS: ${{ steps.status.outputs.status }}
+          DEPLOY_RESULT: ${{ needs.deploy.result }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           SHA: ${{ github.sha }}
         run: bash scripts/telegram-notify.sh
