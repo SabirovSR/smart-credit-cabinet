@@ -24,7 +24,7 @@ export async function upload(id: string, userId: string, form: FormData) {
   const file = form.get("file");
   if (!(file instanceof File)) fail(400, "FILE_REQUIRED", "Выберите PDF-файл.");
   if (file.size > 5 * 1024 * 1024)
-    fail(413, "FILE_TOO_LARGE", "Размер PDF не должен превышать 5 МиБ.");
+    fail(413, "FILE_TOO_LARGE", "Размер PDF не должен превышать 5 МБ.");
   const bytes = Buffer.from(await file.arrayBuffer());
   if (
     !file.name.toLowerCase().endsWith(".pdf") ||
@@ -43,7 +43,7 @@ export async function upload(id: string, userId: string, form: FormData) {
         fail(
           413,
           "APPLICATION_STORAGE_LIMIT",
-          "Лимит документов заявки — 25 МиБ с учётом истории.",
+          "Лимит документов заявки — 25 МБ с учётом истории.",
         );
       await tx.document.updateMany({
         where: { applicationId: id, type, active: true },

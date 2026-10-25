@@ -46,6 +46,7 @@ jobs:
       - run: npm run db:migrate
       - run: npm run typecheck
       - run: npm run test:unit
+      - run: npm run test:deploy
       - run: npm run test:integration
       - run: node scripts/verify-contracts.mjs
       - run: npx redocly lint --config .redocly.yaml docs/openapi.yaml
@@ -152,8 +153,10 @@ jobs:
           set -euo pipefail
           test -n "$SSH_HOST" && test -n "$SSH_USER"
           remote="${SSH_USER}@${SSH_HOST}"
+          ssh "$remote" "mkdir -p /opt/smart-credit-cabinet/deploy"
           scp compose.yaml "${remote}:/opt/smart-credit-cabinet/compose.yaml"
           scp deploy/deploy.sh "${remote}:/opt/smart-credit-cabinet/deploy.sh"
+          scp deploy/Caddyfile deploy/proxy.yaml "${remote}:/opt/smart-credit-cabinet/deploy/"
           printf '%s' "$GHCR_TOKEN" | ssh "$remote" "docker login ghcr.io -u '$GHCR_USER' --password-stdin"
           trap 'ssh "$remote" "docker logout ghcr.io" || true' EXIT
           ssh "$remote" "cd /opt/smart-credit-cabinet && IMAGE_BASE='ghcr.io/${REPOSITORY,,}' IMAGE_TAG='sha-${SHA}' bash deploy.sh"

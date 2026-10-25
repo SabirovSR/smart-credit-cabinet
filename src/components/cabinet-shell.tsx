@@ -13,14 +13,18 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { api } from "@/lib/api-client";
+import { ThemeToggle } from "./theme-toggle";
+import { DemoGuide } from "./demo-guide";
 export function CabinetShell({
   children,
   companyName,
   inn,
+  demoEmail,
 }: {
   children: React.ReactNode;
   companyName: string;
   inn: string;
+  demoEmail?: string;
 }) {
   const path = usePathname(),
     router = useRouter();
@@ -88,6 +92,7 @@ export function CabinetShell({
           </button>
           <span className="topbar-label">Кабинет предпринимателя</span>
           <div className="company-menu">
+            <ThemeToggle />
             <span className="company-avatar">
               {companyName.replace("ООО «", "").slice(0, 1)}
             </span>
@@ -117,7 +122,12 @@ export function CabinetShell({
             {error}
           </div>
         )}
-        <main className="main-content">{children}</main>
+        <main className="main-content">
+          {demoEmail && path === "/dashboard" && (
+            <DemoGuide email={demoEmail} />
+          )}
+          {children}
+        </main>
         <footer className="workspace-footer">
           <span>Дело · Умный кредитный кабинет</span>
           <span>

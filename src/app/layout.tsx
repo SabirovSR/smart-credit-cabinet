@@ -11,7 +11,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ru">
+    <html lang="ru" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(()=>{let theme;try{theme=localStorage.getItem('credit-cabinet-theme')}catch{}document.documentElement.dataset.theme=theme==='dark'||theme!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'})()`,
+          }}
+        />
+      </head>
       <body>{children}</body>
     </html>
   );

@@ -4,12 +4,15 @@ import { useRouter } from "next/navigation";
 import { ArrowUpRight, ArrowRight, ShieldCheck, Check } from "lucide-react";
 import { api } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { demoScenario, demoScenarios } from "@/lib/demo-scenarios";
 export default function Login() {
   const router = useRouter();
   const [email, setEmail] = useState("full@demo.local"),
     [password, setPassword] = useState("DemoCredit2026!");
   const [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
+  const scenario = demoScenario(email);
   async function enter(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
@@ -67,6 +70,7 @@ export default function Login() {
         </div>
       </section>
       <section className="login-form-panel">
+        <ThemeToggle />
         <span className="prototype-tag">
           Прототип по кейсу · не сервис банка
         </span>
@@ -109,25 +113,32 @@ export default function Login() {
             <h3>Попробуйте демо</h3>
             <p>Четыре компании, разные сценарии. Данные синтетические.</p>
             <div className="account-grid">
-              {[
-                ["full", "Полная сумма"],
-                ["reduced", "Меньшая сумма"],
-                ["clarify", "Уточнение"],
-                ["reject", "Отказ"],
-              ].map(([id, title]) => (
+              {demoScenarios.map(({ alias: id, title, company }) => (
                 <button
+                  type="button"
                   key={id}
+                  aria-pressed={email === `${id}@demo.local`}
                   className={email === `${id}@demo.local` ? "selected" : ""}
                   onClick={() => {
                     setEmail(`${id}@demo.local`);
                     setPassword("DemoCredit2026!");
                   }}
                 >
-                  {title}
+                  <span>
+                    <strong>{title}</strong>
+                    <small>{company}</small>
+                  </span>
                   {email === `${id}@demo.local` && <Check size={14} />}
                 </button>
               ))}
             </div>
+            {scenario && (
+              <div className="scenario-preview" aria-live="polite">
+                <strong>{scenario.title}</strong>
+                <p>{scenario.description}</p>
+                <p>{scenario.steps}</p>
+              </div>
+            )}
             <small>Пароль всех аккаунтов: DemoCredit2026!</small>
           </div>
           <p className="secure-note">

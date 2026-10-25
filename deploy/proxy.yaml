@@ -3,6 +3,9 @@ services:
   caddy:
     image: caddy:2-alpine
     network_mode: host
+    environment:
+      APP_DOMAIN: "${APP_DOMAIN:-smart-credit-cabinet.sabirov.tech}"
+      APP_PORT: "${APP_PORT:-3000}"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data

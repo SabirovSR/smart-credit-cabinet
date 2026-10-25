@@ -15,6 +15,7 @@
     "test:unit": "vitest run --coverage",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:e2e": "playwright test",
+    "test:deploy": "node scripts/test-deploy.mjs",
     "check": "npm run typecheck && npm run test:unit && node scripts/verify-contracts.mjs && redocly lint --config .redocly.yaml docs/openapi.yaml"
   },
   "dependencies": {

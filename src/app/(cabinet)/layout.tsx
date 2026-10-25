@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { currentUser } from "@/server/auth/session";
 import { CabinetShell } from "@/components/cabinet-shell";
+import { config } from "@/server/config";
 export const dynamic = "force-dynamic";
 export default async function CabinetLayout({
   children,
@@ -18,7 +19,11 @@ export default async function CabinetLayout({
     redirect("/login");
   }
   return (
-    <CabinetShell companyName={user.company.legalName} inn={user.company.inn}>
+    <CabinetShell
+      companyName={user.company.legalName}
+      inn={user.company.inn}
+      demoEmail={config().DEMO_MODE ? user.email : undefined}
+    >
       {children}
     </CabinetShell>
   );
