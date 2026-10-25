@@ -142,9 +142,11 @@ export default function Login() {
             </div>
             {scenario && (
               <div className="scenario-preview" aria-live="polite">
-                <strong>{scenario.title}</strong>
-                <p>{scenario.description}</p>
-                <p>{scenario.steps}</p>
+                <div className="swap" key={scenario.alias}>
+                  <strong>{scenario.title}</strong>
+                  <p>{scenario.description}</p>
+                  <p>{scenario.steps}</p>
+                </div>
               </div>
             )}
             <small>Пароль всех аккаунтов: DemoCredit2026!</small>

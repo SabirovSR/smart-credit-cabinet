@@ -26,13 +26,19 @@ export function DemoGuide({ email }: { email: string }) {
           className={expanded ? "rotated" : ""}
         />
       </button>
-      <div id="demo-guide-content" hidden={!expanded}>
-        <p>{scenario.description}</p>
-        <p>{scenario.steps} Примеры PDF можно скачать на шаге «Документы».</p>
-        <small>
-          Это инструкция для проверки прототипа. Решение рассчитывается по
-          данным заявки; изменение показателей может изменить результат.
-        </small>
+      <div
+        className="demo-guide-body"
+        id="demo-guide-content"
+        data-collapsed={expanded ? "false" : "true"}
+      >
+        <div className="demo-guide-inner">
+          <p>{scenario.description}</p>
+          <p>{scenario.steps} Примеры PDF можно скачать на шаге «Документы».</p>
+          <small>
+            Это инструкция для проверки прототипа. Решение рассчитывается по
+            данным заявки; изменение показателей может изменить результат.
+          </small>
+        </div>
       </div>
     </section>
   );

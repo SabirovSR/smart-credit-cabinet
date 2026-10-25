@@ -2423,6 +2423,8 @@ label small {
   padding-top: 14px;
   margin-top: 16px;
   font-size: 12px;
+  /* Transform only: the inner .swap carries the fade, so no stacked opacities */
+  animation: nudge-up var(--dur-3) var(--ease-decel) backwards;
 }
 .scenario-preview p:last-child {
   margin-bottom: 0;
@@ -2457,8 +2459,60 @@ label small {
   color: var(--muted);
   margin-bottom: 4px;
 }
+.demo-guide-heading svg {
+  transition: transform var(--dur-3) var(--ease-decel);
+}
 .demo-guide-heading .rotated {
   transform: rotate(180deg);
+}
+.demo-guide-heading:hover svg {
+  transform: translateY(2px);
+}
+.demo-guide-heading:hover .rotated {
+  transform: rotate(180deg) translateY(-2px);
+}
+.demo-guide-heading:active svg {
+  transform: translateY(2px) scale(0.9);
+  transition-duration: var(--dur-1);
+}
+/* Disclosure: rows collapse instead of the content snapping away */
+.demo-guide-body {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition:
+    grid-template-rows var(--dur-3) var(--ease-decel),
+    opacity var(--dur-2) var(--ease-standard),
+    visibility 0s linear 0s;
+}
+.demo-guide-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+.demo-guide-inner > * {
+  transition:
+    opacity var(--dur-2) var(--ease-standard),
+    transform var(--dur-3) var(--ease-decel);
+  transition-delay: calc(var(--step, 55ms) * var(--i, 0));
+}
+.demo-guide-inner > :nth-child(2) {
+  --i: 1;
+}
+.demo-guide-inner > :nth-child(3) {
+  --i: 2;
+}
+.demo-guide-body[data-collapsed="true"] {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    grid-template-rows var(--dur-3) var(--ease-accel),
+    opacity var(--dur-2) var(--ease-accel),
+    visibility 0s linear var(--dur-3);
+}
+.demo-guide-body[data-collapsed="true"] .demo-guide-inner > * {
+  opacity: 0;
+  transform: translateY(-6px);
+  transition-delay: 0ms;
 }
 .demo-guide p {
   color: var(--muted);
