@@ -1,0 +1,11 @@
+flowchart LR
+    Client["Браузер клиента"] --> Web["Next.js UI и REST API"]
+    Web --> Auth["Сессии и проверка владельца"]
+    Web --> App["ApplicationService"]
+    App --> Rules["CreditDecisionService"]
+    App --> Registry["Локальный RegistryAdapter"]
+    App --> Bureau["Локальный CreditHistoryAdapter"]
+    App --> DB[("PostgreSQL")]
+    Web --> Files["DocumentService и файловый volume"]
+    Files --> DB
+    Web --> News["NewsService и локальные материалы"]

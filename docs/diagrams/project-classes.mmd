@@ -1,0 +1,91 @@
+classDiagram
+    class User {
+        +String id
+        +String email
+        +String passwordHash
+        +String companyId
+    }
+    class Company {
+        +String id
+        +String legalName
+        +String inn
+        +String okved
+        +String fixtureKey
+    }
+    class Session {
+        +String id
+        +String tokenHash
+        +DateTime expiresAt
+    }
+    class CreditApplication {
+        +String id
+        +ApplicationStatus status
+        +Int version
+        +Int requestedAmountRub
+        +Int termMonths
+        +Int monthlyRevenueRub
+        +Int monthlyOperatingExpensesRub
+    }
+    class Document {
+        +String id
+        +DocumentType type
+        +String storageKey
+        +String sha256
+        +Boolean active
+    }
+    class EvaluationRun {
+        +String id
+        +Int inputVersion
+        +String policyVersion
+        +Json inputSnapshot
+        +String outcome
+    }
+    class CheckResult {
+        +String type
+        +String status
+        +Json details
+    }
+    class Offer {
+        +String id
+        +Int applicationVersion
+        +Int amountRub
+        +Int termMonths
+        +Int annualRateBps
+        +Int monthlyPaymentRub
+        +DateTime expiresAt
+        +DateTime acceptedAt
+    }
+    class ApplicationEvent {
+        +String type
+        +String actor
+        +DateTime createdAt
+    }
+    class IdempotencyRecord {
+        +String key
+        +String operation
+        +String requestHash
+        +Json responseBody
+    }
+    class ApplicationService {
+        +saveDraft()
+        +submit()
+        +reopen()
+        +acceptOffer()
+    }
+    class CreditDecisionService {
+        +evaluate()
+        +calculatePayment()
+        +findAffordableAmount()
+    }
+    Company "1" --> "1..*" User : representatives
+    User "1" --> "0..*" Session : sessions
+    User "1" --> "0..*" CreditApplication : owns
+    Company "1" --> "0..*" CreditApplication : borrower
+    CreditApplication "1" *-- "0..*" Document
+    CreditApplication "1" *-- "0..*" EvaluationRun
+    EvaluationRun "1" *-- "1..*" CheckResult
+    EvaluationRun "1" --> "0..1" Offer
+    CreditApplication "1" *-- "0..*" ApplicationEvent
+    CreditApplication "1" *-- "0..*" IdempotencyRecord
+    ApplicationService ..> CreditDecisionService : uses
+    ApplicationService ..> CreditApplication : manages

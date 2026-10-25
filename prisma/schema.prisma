@@ -1,0 +1,156 @@
+generator client {
+  provider = "prisma-client"
+  output = "../src/generated/prisma"
+}
+datasource db {
+  provider = "postgresql"
+}
+model Company {
+  id String @id @default(uuid()) @db.Uuid
+  legalName String
+  inn String @unique
+  legalForm String @default("OOO")
+  okved String @default("47.19")
+  industry String @default("TRADE")
+  fixtureKey String @unique
+  createdAt DateTime @default(now())
+  users User[]
+  applications CreditApplication[]
+}
+model User {
+  id String @id @default(uuid()) @db.Uuid
+  email String @unique
+  passwordHash String
+  companyId String @db.Uuid
+  company Company @relation(fields: [companyId], references: [id])
+  createdAt DateTime @default(now())
+  sessions Session[]
+  applications CreditApplication[]
+  idempotencyRecords IdempotencyRecord[]
+}
+model Session {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid
+  user User @relation(fields: [userId], references: [id])
+  tokenHash String @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  @@index([userId])
+  @@index([expiresAt])
+}
+enum ApplicationStatus {
+  DRAFT
+  NEEDS_INFO
+  OFFERED
+  REJECTED
+  ACCEPTED
+}
+enum DocumentType {
+  BANK_STATEMENT
+  FINANCIAL_REPORT
+}
+model CreditApplication {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid
+  user User @relation(fields: [userId], references: [id])
+  companyId String @db.Uuid
+  company Company @relation(fields: [companyId], references: [id])
+  productCode String @default("WORKING_CAPITAL")
+  purpose String @default("")
+  requestedAmountRub Int?
+  termMonths Int?
+  monthlyRevenueRub Int?
+  monthlyOperatingExpensesRub Int?
+  status ApplicationStatus @default(DRAFT)
+  version Int @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  documents Document[]
+  evaluations EvaluationRun[]
+  offers Offer[]
+  events ApplicationEvent[]
+  idempotencyRecords IdempotencyRecord[]
+  @@index([userId, createdAt])
+}
+model Document {
+  id String @id @default(uuid()) @db.Uuid
+  applicationId String @db.Uuid
+  application CreditApplication @relation(fields: [applicationId], references: [id])
+  type DocumentType
+  originalName String
+  storageKey String @unique
+  mimeType String @default("application/pdf")
+  sizeBytes Int
+  sha256 String
+  active Boolean @default(true)
+  createdAt DateTime @default(now())
+  @@index([applicationId, type, active])
+}
+model EvaluationRun {
+  id String @id @default(uuid()) @db.Uuid
+  applicationId String @db.Uuid
+  application CreditApplication @relation(fields: [applicationId], references: [id])
+  inputVersion Int
+  resultVersion Int
+  policyVersion String
+  inputSnapshot Json
+  outcome String
+  reasonCodes Json
+  createdAt DateTime @default(now())
+  checks CheckResult[]
+  offer Offer?
+  @@unique([applicationId, inputVersion])
+}
+model CheckResult {
+  id String @id @default(uuid()) @db.Uuid
+  evaluationRunId String @db.Uuid
+  evaluationRun EvaluationRun @relation(fields: [evaluationRunId], references: [id])
+  type String
+  status String
+  details Json
+  createdAt DateTime @default(now())
+  @@index([evaluationRunId])
+}
+model Offer {
+  id String @id @default(uuid()) @db.Uuid
+  applicationId String @db.Uuid
+  application CreditApplication @relation(fields: [applicationId], references: [id])
+  evaluationRunId String @unique @db.Uuid
+  evaluationRun EvaluationRun @relation(fields: [evaluationRunId], references: [id])
+  applicationVersion Int
+  kind String
+  amountRub Int
+  termMonths Int
+  annualRateBps Int
+  monthlyPaymentRub Int
+  totalRepaymentRub Int
+  expiresAt DateTime
+  acceptedAt DateTime?
+  createdAt DateTime @default(now())
+  @@unique([applicationId, applicationVersion])
+}
+model ApplicationEvent {
+  id String @id @default(uuid()) @db.Uuid
+  applicationId String @db.Uuid
+  application CreditApplication @relation(fields: [applicationId], references: [id])
+  type String
+  actor String
+  payload Json
+  sequence Int
+  createdAt DateTime @default(now())
+  @@unique([applicationId, sequence])
+}
+model IdempotencyRecord {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid
+  user User @relation(fields: [userId], references: [id])
+  applicationId String @db.Uuid
+  application CreditApplication @relation(fields: [applicationId], references: [id])
+  operation String
+  key String
+  requestHash String
+  httpStatus Int
+  responseBody Json
+  createdAt DateTime @default(now())
+  @@unique([userId, applicationId, operation, key])
+}

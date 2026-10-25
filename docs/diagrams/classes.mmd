@@ -1,0 +1,106 @@
+classDiagram
+    class Company {
+        +String id
+        +String legalName
+        +String inn
+        +String fixtureKey
+    }
+    class User {
+        +String id
+        +String email
+        +String passwordHash
+        +String companyId
+    }
+    class Session {
+        +String tokenHash
+        +DateTime expiresAt
+    }
+    class CreditApplication {
+        +String id
+        +String userId
+        +String companyId
+        +ApplicationStatus status
+        +Int version
+        +Int requestedAmountRub
+        +Int termMonths
+        +Int monthlyRevenueRub
+        +Int monthlyOperatingExpensesRub
+    }
+    class Document {
+        +DocumentType type
+        +String storageKey
+        +String sha256
+        +Boolean active
+    }
+    class EvaluationRun {
+        +Int inputVersion
+        +Int resultVersion
+        +String policyVersion
+        +Json inputSnapshot
+        +EvaluationOutcome outcome
+    }
+    class CheckResult {
+        +CheckType type
+        +CheckStatus status
+        +Json details
+    }
+    class Offer {
+        +String id
+        +Int applicationVersion
+        +OfferKind kind
+        +Int amountRub
+        +Int monthlyPaymentRub
+        +DateTime expiresAt
+        +DateTime acceptedAt
+    }
+    class ApplicationEvent {
+        +String type
+        +EventActor actor
+        +Json payload
+        +DateTime createdAt
+    }
+    class IdempotencyRecord {
+        +String key
+        +String operation
+        +String requestHash
+        +Json responseBody
+    }
+    class ApplicationService {
+        +createDraft(userId)
+        +saveDraft(userId, input)
+        +submit(userId, input, key)
+        +reopen(userId, input)
+        +acceptOffer(userId, input, key)
+    }
+    class CreditDecisionService {
+        +evaluate(input, policy)
+        +calculatePayment(amountRub, termMonths)
+        +findAffordableAmount(input)
+    }
+    class RegistryAdapter {
+        <<interface>>
+        +check(companyId)
+    }
+    class CreditHistoryAdapter {
+        <<interface>>
+        +check(companyId)
+    }
+    class DocumentService {
+        +upload(userId, input)
+        +download(userId, documentId)
+        +deactivate(userId, input)
+    }
+    Company "1" --> "1..*" User
+    User "1" --> "0..*" Session
+    User "1" --> "0..*" CreditApplication
+    Company "1" --> "0..*" CreditApplication
+    CreditApplication "1" *-- "0..*" Document
+    CreditApplication "1" *-- "0..*" EvaluationRun
+    EvaluationRun "1" *-- "1..*" CheckResult
+    EvaluationRun "1" --> "0..1" Offer
+    CreditApplication "1" *-- "0..*" ApplicationEvent
+    CreditApplication "1" *-- "0..*" IdempotencyRecord
+    ApplicationService ..> CreditDecisionService
+    ApplicationService ..> RegistryAdapter
+    ApplicationService ..> CreditHistoryAdapter
+    ApplicationService ..> DocumentService

@@ -1,0 +1,12 @@
+stateDiagram-v2
+    [*] --> DRAFT
+    DRAFT --> NEEDS_INFO: submit и нет документов
+    DRAFT --> OFFERED: submit и предложение
+    DRAFT --> REJECTED: submit и отказ
+    NEEDS_INFO --> NEEDS_INFO: повторная отправка без полного комплекта
+    NEEDS_INFO --> OFFERED: submit после дополнения
+    NEEDS_INFO --> REJECTED: submit после дополнения
+    OFFERED --> DRAFT: reopen
+    REJECTED --> DRAFT: reopen
+    OFFERED --> ACCEPTED: принять актуальное предложение
+    ACCEPTED --> [*]

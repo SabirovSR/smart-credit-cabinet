@@ -1,0 +1,30 @@
+sequenceDiagram
+    actor Client as Предприниматель
+    participant UI as Личный кабинет
+    participant API as REST API
+    participant S as ApplicationService
+    participant R as Локальные адаптеры
+    participant C as CreditDecisionService
+    participant DB as PostgreSQL
+    Client->>UI: Отправить заявку
+    UI->>API: POST submit с версией и Idempotency-Key
+    API->>S: Проверить сессию и владельца
+    S->>DB: Прочитать заявку и документы
+    alt Уже обработан такой ключ
+        S-->>API: Сохраненный ответ
+    else Новая операция
+        S->>S: Проверить поля и комплектность
+        alt Документ отсутствует
+            S->>DB: Сохранить NEEDS_INFO и историю
+        else Комплект полный
+            S->>R: Получить синтетические сведения
+            R-->>S: Статус компании и обязательства
+            S->>C: Рассчитать результат
+            C-->>S: Предложение или отказ с причинами
+            S->>DB: Атомарно сохранить результат при совпадении версии
+        end
+        S->>DB: Сохранить ответ идемпотентной операции в той же транзакции
+        S-->>API: Актуальная карточка заявки
+    end
+    API-->>UI: JSON результата
+    UI-->>Client: Условия либо конкретное следующее действие

@@ -1,0 +1,38 @@
+sequenceDiagram
+    actor Client
+    participant UI as Cabinet
+    participant API as SubmitRoute
+    participant S as ApplicationService
+    participant M as LocalAdapters
+    participant C as CreditDecisionService
+    participant DB as PostgreSQL
+    Client->>UI: Submit
+    UI->>API: expectedVersion и Idempotency-Key
+    API->>S: Валидация сессии, Origin, владельца
+    S->>DB: Прочитать IdempotencyRecord
+    alt Сохраненный ключ и совпадающее тело
+        DB-->>S: Сохраненный результат
+        S-->>API: Replay
+    else Новая операция
+        S->>DB: Получить снимок заявки и документов
+        alt Нет обязательного PDF
+            S->>S: NEEDS_INFO
+        else Комплект полный
+            S->>M: Registry и CreditHistory
+            M-->>S: Детерминированные сведения
+            S->>C: Evaluate snapshot
+            C-->>S: Outcome, checks, offer parameters
+        end
+        S->>DB: BEGIN
+        S->>DB: UPDATE по id, userId, version и status
+        alt Версия совпала
+            S->>DB: INSERT EvaluationRun, CheckResult, Offer, Events, IdempotencyRecord
+            S->>DB: COMMIT
+            S-->>API: ApplicationDTO
+        else Конфликт
+            S->>DB: ROLLBACK
+            S-->>API: 409 VERSION_CONFLICT
+        end
+    end
+    API-->>UI: Результат
+    UI-->>Client: Условия или следующее действие

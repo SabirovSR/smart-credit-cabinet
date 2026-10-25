@@ -1,0 +1,28 @@
+sequenceDiagram
+    actor Client
+    participant UI as Cabinet
+    participant API as AcceptRoute
+    participant S as ApplicationService
+    participant DB as PostgreSQL
+    Client->>UI: Принять условия
+    UI->>API: offerId, expectedVersion, Idempotency-Key
+    API->>S: Проверить сессию, Origin, владельца
+    S->>DB: Найти ключ идемпотентности
+    alt Replay
+        DB-->>S: Сохраненный результат
+        S-->>API: Исходный результат без мутации
+    else Новая операция
+        S->>DB: BEGIN и атомарная проверка OFFERED, версии и срока
+        alt Предложение актуально
+            S->>DB: UPDATE Offer.acceptedAt
+            S->>DB: UPDATE application ACCEPTED и version + 1
+            S->>DB: INSERT event и idempotency result
+            S->>DB: COMMIT
+            S-->>API: ACCEPTED
+        else Истекло или версия изменилась
+            S->>DB: ROLLBACK
+            S-->>API: 409 с конкретным кодом
+        end
+    end
+    API-->>UI: JSON
+    UI-->>Client: Итог принятия

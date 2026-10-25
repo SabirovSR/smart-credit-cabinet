@@ -1,0 +1,7 @@
+smart-credit-cabinet.sabirov.tech {
+    encode zstd gzip
+    request_body {
+        max_size 6MB
+    }
+    reverse_proxy 127.0.0.1:3000
+}

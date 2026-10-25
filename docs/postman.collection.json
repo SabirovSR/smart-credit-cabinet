@@ -1,0 +1,819 @@
+{
+  "info": {
+    "name": "Smart Credit Cabinet",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{baseUrl}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"full@demo.local\",\n  \"password\": \"DemoCredit2026!\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code < 300 && pm.response.headers.get('Content-Type')?.includes('json')) {",
+              " const d=pm.response.json().data;",
+              " if(d?.version) {pm.environment.set('version',d.version); pm.environment.set('applicationId',d.id);}",
+              " if(d?.offer) pm.environment.set('offerId',d.offer.id);",
+              " if(d?.document) {pm.environment.set('documentId',d.document.id); pm.environment.set('version',d.applicationVersion);}",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "logout",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{baseUrl}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/auth/logout",
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code < 300 && pm.response.headers.get('Content-Type')?.includes('json')) {",
+              " const d=pm.response.json().data;",
+              " if(d?.version) {pm.environment.set('version',d.version); pm.environment.set('applicationId',d.id);}",
+              " if(d?.offer) pm.environment.set('offerId',d.offer.id);",
+              " if(d?.document) {pm.environment.set('documentId',d.document.id); pm.environment.set('version',d.applicationVersion);}",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "getMe",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{baseUrl}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/auth/me"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code < 300 && pm.response.headers.get('Content-Type')?.includes('json')) {",
+              " const d=pm.response.json().data;",
+              " if(d?.version) {pm.environment.set('version',d.version); pm.environment.set('applicationId',d.id);}",
+              " if(d?.offer) pm.environment.set('offerId',d.offer.id);",
+              " if(d?.document) {pm.environment.set('documentId',d.document.id); pm.environment.set('version',d.applicationVersion);}",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "getCompany",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{baseUrl}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/company"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code < 300 && pm.response.headers.get('Content-Type')?.includes('json')) {",
+              " const d=pm.response.json().data;",
+              " if(d?.version) {pm.environment.set('version',d.version); pm.environment.set('applicationId',d.id);}",
+              " if(d?.offer) pm.environment.set('offerId',d.offer.id);",
+              " if(d?.document) {pm.environment.set('documentId',d.document.id); pm.environment.set('version',d.applicationVersion);}",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "listProducts",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{baseUrl}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/products"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code < 300 && pm.response.headers.get('Content-Type')?.includes('json')) {",
+              " const d=pm.response.json().data;",
+              " if(d?.version) {pm.environment.set('version',d.version); pm.environment.set('applicationId',d.id);}",
+              " if(d?.offer) pm.environment.set('offerId',d.offer.id);",
+              " if(d?.document) {pm.environment.set('documentId',d.document.id); pm.environment.set('version',d.applicationVersion);}",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "calculateLoan",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{baseUrl}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/calculations",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"amountRub\": 2000000,\n  \"termMonths\": 12\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code < 300 && pm.response.headers.get('Content-Type')?.includes('json')) {",
+              " const d=pm.response.json().data;",
+              " if(d?.version) {pm.environment.set('version',d.version); pm.environment.set('applicationId',d.id);}",
+              " if(d?.offer) pm.environment.set('offerId',d.offer.id);",
+              " if(d?.document) {pm.environment.set('documentId',d.document.id); pm.environment.set('version',d.applicationVersion);}",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "listApplications",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{baseUrl}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/applications"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code < 300 && pm.response.headers.get('Content-Type')?.includes('json')) {",
+              " const d=pm.response.json().data;",
+              " if(d?.version) {pm.environment.set('version',d.version); pm.environment.set('applicationId',d.id);}",
+              " if(d?.offer) pm.environment.set('offerId',d.offer.id);",
+              " if(d?.document) {pm.environment.set('documentId',d.document.id); pm.environment.set('version',d.applicationVersion);}",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "createApplication",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{baseUrl}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/applications",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"productCode\": \"WORKING_CAPITAL\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code < 300 && pm.response.headers.get('Content-Type')?.includes('json')) {",
+              " const d=pm.response.json().data;",
+              " if(d?.version) {pm.environment.set('version',d.version); pm.environment.set('applicationId',d.id);}",
+              " if(d?.offer) pm.environment.set('offerId',d.offer.id);",
+              " if(d?.document) {pm.environment.set('documentId',d.document.id); pm.environment.set('version',d.applicationVersion);}",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "getApplication",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{baseUrl}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/applications/{{applicationId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code < 300 && pm.response.headers.get('Content-Type')?.includes('json')) {",
+              " const d=pm.response.json().data;",
+              " if(d?.version) {pm.environment.set('version',d.version); pm.environment.set('applicationId',d.id);}",
+              " if(d?.offer) pm.environment.set('offerId',d.offer.id);",
+              " if(d?.document) {pm.environment.set('documentId',d.document.id); pm.environment.set('version',d.applicationVersion);}",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "updateApplication",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{baseUrl}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/applications/{{applicationId}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"expectedVersion\": {{version}},\n  \"purpose\": \"Закупка сезонного товара\",\n  \"requestedAmountRub\": 2000000,\n  \"termMonths\": 12,\n  \"monthlyRevenueRub\": 1200000,\n  \"monthlyOperatingExpensesRub\": 600000\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code < 300 && pm.response.headers.get('Content-Type')?.includes('json')) {",
+              " const d=pm.response.json().data;",
+              " if(d?.version) {pm.environment.set('version',d.version); pm.environment.set('applicationId',d.id);}",
+              " if(d?.offer) pm.environment.set('offerId',d.offer.id);",
+              " if(d?.document) {pm.environment.set('documentId',d.document.id); pm.environment.set('version',d.applicationVersion);}",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "submitApplication",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{baseUrl}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{operationKey}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/applications/{{applicationId}}/submit",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"expectedVersion\": {{version}}\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.environment.set('operationKey', pm.variables.replaceIn('{{$guid}}')); ",
+              "pm.environment.set('operationVersion', pm.environment.get('version')); "
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code < 300 && pm.response.headers.get('Content-Type')?.includes('json')) {",
+              " const d=pm.response.json().data;",
+              " if(d?.version) {pm.environment.set('version',d.version); pm.environment.set('applicationId',d.id);}",
+              " if(d?.offer) pm.environment.set('offerId',d.offer.id);",
+              " if(d?.document) {pm.environment.set('documentId',d.document.id); pm.environment.set('version',d.applicationVersion);}",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "reopenApplication",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{baseUrl}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/applications/{{applicationId}}/reopen",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"expectedVersion\": {{version}}\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code < 300 && pm.response.headers.get('Content-Type')?.includes('json')) {",
+              " const d=pm.response.json().data;",
+              " if(d?.version) {pm.environment.set('version',d.version); pm.environment.set('applicationId',d.id);}",
+              " if(d?.offer) pm.environment.set('offerId',d.offer.id);",
+              " if(d?.document) {pm.environment.set('documentId',d.document.id); pm.environment.set('version',d.applicationVersion);}",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "uploadDocument",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{baseUrl}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/applications/{{applicationId}}/documents",
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "expectedVersion",
+              "value": "{{version}}",
+              "type": "text"
+            },
+            {
+              "key": "type",
+              "value": "BANK_STATEMENT",
+              "type": "text"
+            },
+            {
+              "key": "file",
+              "type": "file",
+              "src": "../public/demo-documents/bank-statement.pdf"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code < 300 && pm.response.headers.get('Content-Type')?.includes('json')) {",
+              " const d=pm.response.json().data;",
+              " if(d?.version) {pm.environment.set('version',d.version); pm.environment.set('applicationId',d.id);}",
+              " if(d?.offer) pm.environment.set('offerId',d.offer.id);",
+              " if(d?.document) {pm.environment.set('documentId',d.document.id); pm.environment.set('version',d.applicationVersion);}",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "downloadDocument",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{baseUrl}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/documents/{{documentId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code < 300 && pm.response.headers.get('Content-Type')?.includes('json')) {",
+              " const d=pm.response.json().data;",
+              " if(d?.version) {pm.environment.set('version',d.version); pm.environment.set('applicationId',d.id);}",
+              " if(d?.offer) pm.environment.set('offerId',d.offer.id);",
+              " if(d?.document) {pm.environment.set('documentId',d.document.id); pm.environment.set('version',d.applicationVersion);}",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "deactivateDocument",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{baseUrl}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/documents/{{documentId}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"expectedVersion\": {{version}}\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code < 300 && pm.response.headers.get('Content-Type')?.includes('json')) {",
+              " const d=pm.response.json().data;",
+              " if(d?.version) {pm.environment.set('version',d.version); pm.environment.set('applicationId',d.id);}",
+              " if(d?.offer) pm.environment.set('offerId',d.offer.id);",
+              " if(d?.document) {pm.environment.set('documentId',d.document.id); pm.environment.set('version',d.applicationVersion);}",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "acceptOffer",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{baseUrl}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{operationKey}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/applications/{{applicationId}}/offers/{{offerId}}/accept",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"expectedVersion\": {{version}}\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.environment.set('operationKey', pm.variables.replaceIn('{{$guid}}')); ",
+              "pm.environment.set('operationVersion', pm.environment.get('version')); "
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code < 300 && pm.response.headers.get('Content-Type')?.includes('json')) {",
+              " const d=pm.response.json().data;",
+              " if(d?.version) {pm.environment.set('version',d.version); pm.environment.set('applicationId',d.id);}",
+              " if(d?.offer) pm.environment.set('offerId',d.offer.id);",
+              " if(d?.document) {pm.environment.set('documentId',d.document.id); pm.environment.set('version',d.applicationVersion);}",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "listNews",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{baseUrl}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/news"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code < 300 && pm.response.headers.get('Content-Type')?.includes('json')) {",
+              " const d=pm.response.json().data;",
+              " if(d?.version) {pm.environment.set('version',d.version); pm.environment.set('applicationId',d.id);}",
+              " if(d?.offer) pm.environment.set('offerId',d.offer.id);",
+              " if(d?.document) {pm.environment.set('documentId',d.document.id); pm.environment.set('version',d.applicationVersion);}",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "getNewsArticle",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{baseUrl}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/news/working-capital"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code < 300 && pm.response.headers.get('Content-Type')?.includes('json')) {",
+              " const d=pm.response.json().data;",
+              " if(d?.version) {pm.environment.set('version',d.version); pm.environment.set('applicationId',d.id);}",
+              " if(d?.offer) pm.environment.set('offerId',d.offer.id);",
+              " if(d?.document) {pm.environment.set('documentId',d.document.id); pm.environment.set('version',d.applicationVersion);}",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "getOpenApi",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{baseUrl}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/openapi"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code < 300 && pm.response.headers.get('Content-Type')?.includes('json')) {",
+              " const d=pm.response.json().data;",
+              " if(d?.version) {pm.environment.set('version',d.version); pm.environment.set('applicationId',d.id);}",
+              " if(d?.offer) pm.environment.set('offerId',d.offer.id);",
+              " if(d?.document) {pm.environment.set('documentId',d.document.id); pm.environment.set('version',d.applicationVersion);}",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "getLiveness",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{baseUrl}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/health/live"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code < 300 && pm.response.headers.get('Content-Type')?.includes('json')) {",
+              " const d=pm.response.json().data;",
+              " if(d?.version) {pm.environment.set('version',d.version); pm.environment.set('applicationId',d.id);}",
+              " if(d?.offer) pm.environment.set('offerId',d.offer.id);",
+              " if(d?.document) {pm.environment.set('documentId',d.document.id); pm.environment.set('version',d.applicationVersion);}",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "getReadiness",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{baseUrl}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/health/ready"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code < 300 && pm.response.headers.get('Content-Type')?.includes('json')) {",
+              " const d=pm.response.json().data;",
+              " if(d?.version) {pm.environment.set('version',d.version); pm.environment.set('applicationId',d.id);}",
+              " if(d?.offer) pm.environment.set('offerId',d.offer.id);",
+              " if(d?.document) {pm.environment.set('documentId',d.document.id); pm.environment.set('version',d.applicationVersion);}",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "submitApplicationReplay",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{baseUrl}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{operationKey}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/applications/{{applicationId}}/submit",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"expectedVersion\": {{operationVersion}}\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code < 300 && pm.response.headers.get('Content-Type')?.includes('json')) {",
+              " const d=pm.response.json().data;",
+              " if(d?.version) {pm.environment.set('version',d.version); pm.environment.set('applicationId',d.id);}",
+              " if(d?.offer) pm.environment.set('offerId',d.offer.id);",
+              " if(d?.document) {pm.environment.set('documentId',d.document.id); pm.environment.set('version',d.applicationVersion);}",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "acceptOfferReplay",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{baseUrl}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{operationKey}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/applications/{{applicationId}}/offers/{{offerId}}/accept",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"expectedVersion\": {{operationVersion}}\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code < 300 && pm.response.headers.get('Content-Type')?.includes('json')) {",
+              " const d=pm.response.json().data;",
+              " if(d?.version) {pm.environment.set('version',d.version); pm.environment.set('applicationId',d.id);}",
+              " if(d?.offer) pm.environment.set('offerId',d.offer.id);",
+              " if(d?.document) {pm.environment.set('documentId',d.document.id); pm.environment.set('version',d.applicationVersion);}",
+              "}"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

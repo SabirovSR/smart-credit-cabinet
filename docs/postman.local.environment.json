@@ -1,0 +1,41 @@
+{
+  "name": "Local demo",
+  "values": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "enabled": true
+    },
+    {
+      "key": "applicationId",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "documentId",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "offerId",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "operationKey",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "operationVersion",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "version",
+      "value": 1,
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment"
+}

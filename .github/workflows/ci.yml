@@ -1,0 +1,173 @@
+name: CI/CD
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+jobs:
+  quality:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:17-bookworm
+        env:
+          POSTGRES_USER: credit
+          POSTGRES_PASSWORD: credit-demo-local-password
+          POSTGRES_DB: credit_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd 'pg_isready -U credit -d credit_test'
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      DATABASE_URL: postgresql://credit:credit-demo-local-password@localhost:5432/credit_test
+      TEST_DATABASE_URL: postgresql://credit:credit-demo-local-password@localhost:5432/credit_test
+      APP_ORIGIN: http://localhost:3000
+      UPLOAD_DIR: ./work/integration-uploads
+      DEMO_MODE: "true"
+      COOKIE_SECURE: "false"
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm install --global npm@11.21.1
+      - run: npm ci
+      - run: npm run db:generate
+      - run: npm run db:migrate
+      - run: npm run typecheck
+      - run: npm run test:unit
+      - run: npm run test:integration
+      - run: node scripts/verify-contracts.mjs
+      - run: npx redocly lint --config .redocly.yaml docs/openapi.yaml
+      - run: npm run build
+  docker-e2e:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm install --global npm@11.21.1
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: docker compose up --build -d --wait --wait-timeout 180
+      - run: npm run test:e2e
+      - run: node scripts/persistence-probe.mjs before
+      - run: docker compose restart app
+      - run: node scripts/wait-for-ready.mjs
+      - run: node scripts/persistence-probe.mjs after
+      - name: Database failure readiness
+        run: |
+          docker compose stop db
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/api/health/ready)" = '503'
+          curl -fsS http://localhost:3000/api/health/live
+          docker compose start db
+          node scripts/wait-for-ready.mjs
+      - name: Diagnostics
+        if: failure()
+        run: docker compose logs --tail=150 app init db
+      - uses: actions/upload-artifact@v7.0.2
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+      - name: Stop isolated CI stack
+        if: always()
+        run: docker compose down --volumes
+  build-and-push:
+    needs: [quality, docker-e2e]
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: docker/login-action@v4.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/setup-buildx-action@v4.4.1
+      - id: image
+        env:
+          REPOSITORY: ${{ github.repository }}
+        run: echo "base=ghcr.io/${REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+      - uses: docker/build-push-action@v7.4.0
+        with:
+          context: .
+          target: runner
+          push: true
+          tags: ${{ steps.image.outputs.base }}:sha-${{ github.sha }}
+          cache-from: type=gha,scope=credit
+          cache-to: type=gha,mode=max,scope=credit
+      - uses: docker/build-push-action@v7.4.0
+        with:
+          context: .
+          target: init
+          push: true
+          tags: ${{ steps.image.outputs.base }}-init:sha-${{ github.sha }}
+          cache-from: type=gha,scope=credit
+  deploy:
+    needs: [build-and-push]
+    if: github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    environment: production
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Configure SSH
+        env:
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          test -n "$SSH_KEY" && test -n "$SSH_KNOWN_HOSTS"
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/id_ed25519 ~/.ssh/known_hosts
+      - name: Publish runtime files and deploy
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USER: ${{ github.actor }}
+          REPOSITORY: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          test -n "$SSH_HOST" && test -n "$SSH_USER"
+          remote="${SSH_USER}@${SSH_HOST}"
+          scp compose.yaml "${remote}:/opt/smart-credit-cabinet/compose.yaml"
+          scp deploy/deploy.sh "${remote}:/opt/smart-credit-cabinet/deploy.sh"
+          printf '%s' "$GHCR_TOKEN" | ssh "$remote" "docker login ghcr.io -u '$GHCR_USER' --password-stdin"
+          trap 'ssh "$remote" "docker logout ghcr.io" || true' EXIT
+          ssh "$remote" "cd /opt/smart-credit-cabinet && IMAGE_BASE='ghcr.io/${REPOSITORY,,}' IMAGE_TAG='sha-${SHA}' bash deploy.sh"
+      - name: Clear ephemeral key
+        if: always()
+        run: rm -f ~/.ssh/id_ed25519
+  notify:
+    needs: [quality, docker-e2e, build-and-push, deploy]
+    if: always() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Telegram status
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          STATUS: ${{ needs.deploy.result }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          SHA: ${{ github.sha }}
+        run: bash scripts/telegram-notify.sh
