@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -18,14 +17,24 @@ import {
   type ArticleDTO,
 } from "@/lib/api-client";
 import { rub, statusLabel, date } from "@/lib/format";
+import { stage } from "@/lib/motion";
 import { Button } from "./ui/button";
+import { NavLink } from "./ui/nav-link";
+import { Spinner } from "./ui/spinner";
+import {
+  HeadingSkeleton,
+  HeroSkeleton,
+  ListSkeleton,
+  NewsSkeleton,
+} from "./ui/skeleton";
 export function ApplicationList({ items }: { items: ListItem[] }) {
   return (
     <div className="application-list">
       {items.length ? (
-        items.map((item) => (
-          <Link
+        items.map((item, i) => (
+          <NavLink
             className="application-row"
+            style={stage(i, 55)}
             key={item.id}
             href={`/applications/${item.id}`}
           >
@@ -45,7 +54,7 @@ export function ApplicationList({ items }: { items: ListItem[] }) {
               {statusLabel[item.status]}
             </span>
             <ChevronRight size={18} />
-          </Link>
+          </NavLink>
         ))
       ) : (
         <div className="empty-apps">
@@ -59,9 +68,9 @@ export function ApplicationList({ items }: { items: ListItem[] }) {
               позже.
             </p>
           </div>
-          <Link href="/applications/new">
-            Создать заявку <ArrowRight size={17} />
-          </Link>
+          <NavLink href="/applications/new">
+            Создать заявку <ArrowRight size={17} className="nudge" />
+          </NavLink>
         </div>
       )}
     </div>
@@ -71,10 +80,11 @@ export function NewsCards({ items }: { items: ArticleDTO[] }) {
   return (
     <div className="news-grid">
       {items.map((article, i) => (
-        <Link
+        <NavLink
           href={`/news/${article.id}`}
           key={article.id}
           className="news-card"
+          style={stage(i, 70)}
         >
           <div className={`article-art art-${i % 4}`}>
             <span>ДЛЯ ВАШЕГО БИЗНЕСА</span>
@@ -95,7 +105,7 @@ export function NewsCards({ items }: { items: ArticleDTO[] }) {
               Читать материал <ArrowUpRight size={16} />
             </span>
           </div>
-        </Link>
+        </NavLink>
       ))}
     </div>
   );
@@ -138,8 +148,46 @@ export function Dashboard({
     );
   if (!loaded)
     return (
-      <div className="loading" role="status">
-        Загружаем ваш кабинет…
+      <div role="status" aria-busy="true">
+        <span className="sr-only">Загружаем ваш кабинет…</span>
+        <HeadingSkeleton />
+        {!onlyApplications && (
+          <>
+            <HeroSkeleton />
+            <div className="section">
+              <div className="section-heading">
+                <h2>
+                  Ваши заявки{" "}
+                  <span
+                    className="skeleton"
+                    style={{ width: 34, height: 22, borderRadius: 6 }}
+                  />
+                </h2>
+              </div>
+              <ListSkeleton rows={3} />
+            </div>
+            <div className="section">
+              <div className="section-heading">
+                <h2>На пользу вашему делу</h2>
+              </div>
+              <NewsSkeleton cards={3} />
+            </div>
+          </>
+        )}
+        {onlyApplications && (
+          <div className="section">
+            <div className="section-heading">
+              <h2>
+                История заявок{" "}
+                <span
+                  className="skeleton"
+                  style={{ width: 34, height: 22, borderRadius: 6 }}
+                />
+              </h2>
+            </div>
+            <ListSkeleton rows={4} />
+          </div>
+        )}
       </div>
     );
   return (
@@ -160,9 +208,9 @@ export function Dashboard({
         </div>
         {onlyApplications && (
           <Button asChild>
-            <Link href="/applications/new">
+            <NavLink href="/applications/new">
               <Plus size={18} /> Новая заявка
-            </Link>
+            </NavLink>
           </Button>
         )}
       </div>
@@ -197,9 +245,9 @@ export function Dashboard({
                 </div>
               </div>
               <Button asChild>
-                <Link href="/applications/new">
-                  Подать заявку <ArrowRight size={19} />
-                </Link>
+                <NavLink href="/applications/new">
+                  Подать заявку <ArrowRight size={19} className="nudge" />
+                </NavLink>
               </Button>
               <small className="hero-disclaimer">
                 Демонстрационные условия · без выдачи реальных денег
@@ -238,41 +286,46 @@ export function Dashboard({
         <div className="section-heading">
           <h2>
             {onlyApplications ? "История заявок" : "Ваши заявки"}
-            <span className="count-pill">
+            <span className={`count-pill ${loaded ? "pop" : ""}`}>
               {items.length}
               {cursor ? "+" : ""}
             </span>
           </h2>
           {!onlyApplications && (
-            <Link href="/applications">
-              Все заявки <ArrowRight size={16} />
-            </Link>
+            <NavLink href="/applications">
+              Все заявки <ArrowRight size={16} className="nudge" />
+            </NavLink>
           )}
         </div>
-        <ApplicationList items={onlyApplications ? items : items.slice(0, 3)} />
-        {onlyApplications && cursor && (
-          <Button
-            variant="secondary"
-            disabled={loadingMore}
-            onClick={async () => {
-              setLoadingMore(true);
-              try {
-                const result = await api<{
-                  items: ListItem[];
-                  nextCursor: string | null;
-                }>(`/applications?cursor=${cursor}`);
-                setItems([...items, ...result.items]);
-                setCursor(result.nextCursor);
-              } catch (e) {
-                setError((e as Error).message);
-              } finally {
-                setLoadingMore(false);
-              }
-            }}
-          >
-            Загрузить ещё
-          </Button>
-        )}
+        <div aria-busy={loadingMore || undefined}>
+          <ApplicationList
+            items={onlyApplications ? items : items.slice(0, 3)}
+          />
+          {onlyApplications && cursor && (
+            <Button
+              variant="secondary"
+              disabled={loadingMore}
+              onClick={async () => {
+                setLoadingMore(true);
+                try {
+                  const result = await api<{
+                    items: ListItem[];
+                    nextCursor: string | null;
+                  }>(`/applications?cursor=${cursor}`);
+                  setItems([...items, ...result.items]);
+                  setCursor(result.nextCursor);
+                } catch (e) {
+                  setError((e as Error).message);
+                } finally {
+                  setLoadingMore(false);
+                }
+              }}
+            >
+              {loadingMore && <Spinner />}
+              {loadingMore ? "Загружаем…" : "Загрузить ещё"}
+            </Button>
+          )}
+        </div>
       </section>
       {!onlyApplications && (
         <section className="section">
@@ -281,9 +334,9 @@ export function Dashboard({
               <h2>На пользу вашему делу</h2>
               <p>Справочные демоматериалы с учётом вашей ситуации</p>
             </div>
-            <Link href="/news">
-              Все материалы <ArrowRight size={16} />
-            </Link>
+            <NavLink href="/news">
+              Все материалы <ArrowRight size={16} className="nudge" />
+            </NavLink>
           </div>
           <NewsCards items={articles.slice(0, 3)} />
         </section>

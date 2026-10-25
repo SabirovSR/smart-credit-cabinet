@@ -6,11 +6,13 @@ import { api } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { demoScenario, demoScenarios } from "@/lib/demo-scenarios";
+import { Spinner } from "@/components/ui/spinner";
 export default function Login() {
   const router = useRouter();
   const [email, setEmail] = useState("full@demo.local"),
     [password, setPassword] = useState("DemoCredit2026!");
   const [error, setError] = useState(""),
+    [attempt, setAttempt] = useState(0),
     [busy, setBusy] = useState(false);
   const scenario = demoScenario(email);
   async function enter(e: React.FormEvent) {
@@ -26,6 +28,7 @@ export default function Login() {
       router.refresh();
     } catch (e) {
       setError((e as Error).message);
+      setAttempt((n) => n + 1);
     } finally {
       setBusy(false);
     }
@@ -100,13 +103,18 @@ export default function Login() {
               />
             </label>
             {error && (
-              <p role="alert" className="error-box">
+              <p
+                role="alert"
+                className="error-box shake"
+                key={`${error}-${attempt}`}
+              >
                 {error}
               </p>
             )}
-            <Button disabled={busy} type="submit">
+            <Button disabled={busy} type="submit" aria-busy={busy || undefined}>
+              {busy && <Spinner size={18} />}
               {busy ? "Входим…" : "Войти в кабинет"}
-              <ArrowRight size={18} />
+              {!busy && <ArrowRight size={18} className="nudge" />}
             </Button>
           </form>
           <div className="demo-accounts">
