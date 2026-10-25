@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import {
   ArrowLeft,
   ArrowRight,
@@ -14,8 +13,12 @@ import {
 } from "lucide-react";
 import { api, ClientError } from "@/lib/api-client";
 import { rub, date, statusLabel } from "@/lib/format";
+import { stage } from "@/lib/motion";
 import type { ApplicationDTO } from "@/contracts/application";
 import { Button } from "./ui/button";
+import { NavLink } from "./ui/nav-link";
+import { Spinner } from "./ui/spinner";
+import { HeadingSkeleton, PanelsSkeleton } from "./ui/skeleton";
 export function ApplicationDetail({ id }: { id: string }) {
   const [app, setApp] = useState<ApplicationDTO | null>(null),
     [error, setError] = useState(""),
@@ -70,12 +73,15 @@ export function ApplicationDetail({ id }: { id: string }) {
     }
   }
   if (!app)
-    return (
-      <div
-        className={error ? "error-box" : "loading"}
-        role={error ? "alert" : "status"}
-      >
-        {error || "Загружаем заявку…"}
+    return error ? (
+      <div className="error-box shake" role="alert" key={error}>
+        {error}
+      </div>
+    ) : (
+      <div role="status" aria-busy="true">
+        <span className="sr-only">Загружаем заявку…</span>
+        <HeadingSkeleton />
+        <PanelsSkeleton />
       </div>
     );
   const offered = app.status === "OFFERED",
@@ -92,168 +98,182 @@ export function ApplicationDetail({ id }: { id: string }) {
           : "Ваша заявка ждёт продолжения";
   return (
     <>
-      <Link className="back-link" href="/applications">
+      <NavLink className="back-link" href="/applications" direction="back">
         <ArrowLeft size={16} /> Мои заявки
-      </Link>
+      </NavLink>
       <div className="page-heading">
         <div>
           <span className="eyebrow">
             ЗАЯВКА № {id.slice(0, 8).toUpperCase()}
           </span>
-          <h1>{title}</h1>
+          <h1 className="swap" key={`title-${app.status}`}>
+            {title}
+          </h1>
           <p>Оборотное финансирование · {date(app.createdAt)} · время Москвы</p>
         </div>
-        <span className={`status status-${app.status.toLowerCase()}`}>
+        <span
+          className={`status swap status-${app.status.toLowerCase()}`}
+          key={`status-${app.status}`}
+        >
           {statusLabel[app.status]}
         </span>
       </div>
       {error && (
-        <div className="error-box" role="alert">
+        <div className="error-box shake" role="alert" key={error}>
           {error}
         </div>
       )}
       <div className="detail-layout">
         <div>
-          {offer && (
-            <section className={`offer-card ${accepted ? "accepted" : ""}`}>
-              <div className="offer-heading">
-                <span className="offer-icon">
-                  <CircleCheck size={27} />
-                </span>
-                <div>
-                  <span className="eyebrow">
-                    {accepted
-                      ? "УСЛОВИЯ ПРИНЯТЫ"
-                      : offer.kind === "REDUCED"
-                        ? "ПРЕДЛОЖЕНИЕ МЕНЬШЕЙ СУММЫ"
-                        : "ПРЕДЛОЖЕНИЕ ПОЛНОЙ СУММЫ"}
+          <div className="status-swap" key={`state-${app.status}`}>
+            {offer && (
+              <section className={`offer-card ${accepted ? "accepted" : ""}`}>
+                <div className="offer-heading">
+                  <span className="offer-icon">
+                    <CircleCheck size={27} />
                   </span>
-                  <h2>{rub(offer.amountRub)}</h2>
-                </div>
-              </div>
-              {offer.kind === "REDUCED" && (
-                <p className="reduced-explanation">
-                  Вы запросили {rub(app.requestedAmountRub)}. Предлагаем{" "}
-                  {rub(offer.amountRub)}, чтобы платёж соответствовал денежному
-                  потоку компании.
-                </p>
-              )}
-              <div className="offer-terms">
-                <div>
-                  <span>Ежемесячный платёж</span>
-                  <strong>{rub(offer.monthlyPaymentRub)}</strong>
-                </div>
-                <div>
-                  <span>Срок</span>
-                  <strong>{offer.termMonths} мес.</strong>
-                </div>
-                <div>
-                  <span>Ставка</span>
-                  <strong>{offer.annualRateBps / 100}%</strong>
-                </div>
-              </div>
-              <div className="total-payment">
-                <span>Расчётная сумма всех платежей</span>
-                <strong>{rub(offer.totalRepaymentRub)}</strong>
-              </div>
-              {accepted ? (
-                <div className="info-note">
-                  <Check size={20} />
-                  <p>
-                    Вы приняли демонстрационные условия{" "}
-                    {date(offer.acceptedAt!)}. Сценарий завершён. Договор не
-                    заключён, деньги не выдаются.
-                  </p>
-                </div>
-              ) : (
-                <>
-                  <p className="offer-expiry">
-                    <Clock3 size={16} />
-                    {offer.expired
-                      ? "Срок предложения истёк"
-                      : `Действует до ${date(offer.expiresAt)} (МСК)`}
-                  </p>
-                  <label className="checkbox-label">
-                    <input
-                      type="checkbox"
-                      checked={consent}
-                      disabled={busy || offer.expired}
-                      onChange={(e) => setConsent(e.target.checked)}
-                    />
-                    <span>
-                      Я ознакомился с предложением на {rub(offer.amountRub)} и
-                      принимаю демонстрационные условия. Это не электронная
-                      подпись.
+                  <div>
+                    <span className="eyebrow">
+                      {accepted
+                        ? "УСЛОВИЯ ПРИНЯТЫ"
+                        : offer.kind === "REDUCED"
+                          ? "ПРЕДЛОЖЕНИЕ МЕНЬШЕЙ СУММЫ"
+                          : "ПРЕДЛОЖЕНИЕ ПОЛНОЙ СУММЫ"}
                     </span>
-                  </label>
-                  <div className="offer-actions">
-                    <Button
-                      disabled={busy || !consent || offer.expired}
-                      onClick={() => action("accept")}
-                    >
-                      {busy ? "Сохраняем…" : "Принять условия"}
-                      <ArrowRight size={17} />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      disabled={busy}
-                      onClick={() => action("reopen")}
-                    >
-                      Изменить заявку
-                    </Button>
+                    <h2>{rub(offer.amountRub)}</h2>
                   </div>
-                </>
-              )}
-              <p className="fine-print">
-                Синтетические условия. Расчёт без комиссий и календарного
-                начисления процентов. Не предложение реального банка.
-              </p>
-            </section>
-          )}
-          {!offer && (
-            <section className="panel result-panel">
-              <Info size={30} />
-              <h2>
-                {app.status === "DRAFT"
-                  ? "Продолжите с того места, где остановились"
-                  : app.status === "NEEDS_INFO"
-                    ? "Не хватает документов"
-                    : "Причина решения"}
-              </h2>
-              {app.status !== "DRAFT" &&
-                app.latestEvaluation?.reasons.map((r) => (
-                  <p key={r.code}>{r.message}</p>
-                ))}
-              {app.status === "NEEDS_INFO" && (
-                <ul>
-                  {["BANK_STATEMENT", "FINANCIAL_REPORT"]
-                    .filter((t) => !app.documents.some((d) => d.type === t))
-                    .map((t) => (
-                      <li key={t}>
-                        {t === "BANK_STATEMENT"
-                          ? "Выписка по счёту"
-                          : "Финансовый отчёт"}
-                      </li>
-                    ))}
-                </ul>
-              )}
-              {["DRAFT", "NEEDS_INFO"].includes(app.status) ? (
-                <Button asChild>
-                  <Link href={`/applications/${id}/edit`}>
-                    {app.status === "DRAFT"
-                      ? "Продолжить заполнение"
-                      : "Добавить документы"}
-                    <ArrowRight size={17} />
-                  </Link>
-                </Button>
-              ) : (
-                <Button disabled={busy} onClick={() => action("reopen")}>
-                  <Pencil size={17} /> Вернуться к редактированию
-                </Button>
-              )}
-            </section>
-          )}
-          <section className="panel">
+                </div>
+                {offer.kind === "REDUCED" && (
+                  <p className="reduced-explanation">
+                    Вы запросили {rub(app.requestedAmountRub)}. Предлагаем{" "}
+                    {rub(offer.amountRub)}, чтобы платёж соответствовал
+                    денежному потоку компании.
+                  </p>
+                )}
+                <div className="offer-terms">
+                  <div>
+                    <span>Ежемесячный платёж</span>
+                    <strong>{rub(offer.monthlyPaymentRub)}</strong>
+                  </div>
+                  <div>
+                    <span>Срок</span>
+                    <strong>{offer.termMonths} мес.</strong>
+                  </div>
+                  <div>
+                    <span>Ставка</span>
+                    <strong>{offer.annualRateBps / 100}%</strong>
+                  </div>
+                </div>
+                <div className="total-payment">
+                  <span>Расчётная сумма всех платежей</span>
+                  <strong>{rub(offer.totalRepaymentRub)}</strong>
+                </div>
+                {accepted ? (
+                  <div className="info-note">
+                    <Check size={20} />
+                    <p>
+                      Вы приняли демонстрационные условия{" "}
+                      {date(offer.acceptedAt!)}. Сценарий завершён. Договор не
+                      заключён, деньги не выдаются.
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <p className="offer-expiry">
+                      <Clock3 size={16} />
+                      {offer.expired
+                        ? "Срок предложения истёк"
+                        : `Действует до ${date(offer.expiresAt)} (МСК)`}
+                    </p>
+                    <label className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={consent}
+                        disabled={busy || offer.expired}
+                        onChange={(e) => setConsent(e.target.checked)}
+                      />
+                      <span>
+                        Я ознакомился с предложением на {rub(offer.amountRub)} и
+                        принимаю демонстрационные условия. Это не электронная
+                        подпись.
+                      </span>
+                    </label>
+                    <div className="offer-actions">
+                      <Button
+                        disabled={busy || !consent || offer.expired}
+                        aria-busy={busy || undefined}
+                        onClick={() => action("accept")}
+                      >
+                        {busy && <Spinner />}
+                        {busy ? "Сохраняем…" : "Принять условия"}
+                        {!busy && <ArrowRight size={17} className="nudge" />}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        disabled={busy}
+                        onClick={() => action("reopen")}
+                      >
+                        Изменить заявку
+                      </Button>
+                    </div>
+                  </>
+                )}
+                <p className="fine-print">
+                  Синтетические условия. Расчёт без комиссий и календарного
+                  начисления процентов. Не предложение реального банка.
+                </p>
+              </section>
+            )}
+            {!offer && (
+              <section className="panel result-panel">
+                <Info size={30} />
+                <h2>
+                  {app.status === "DRAFT"
+                    ? "Продолжите с того места, где остановились"
+                    : app.status === "NEEDS_INFO"
+                      ? "Не хватает документов"
+                      : "Причина решения"}
+                </h2>
+                {app.status !== "DRAFT" &&
+                  app.latestEvaluation?.reasons.map((r) => (
+                    <p key={r.code}>{r.message}</p>
+                  ))}
+                {app.status === "NEEDS_INFO" && (
+                  <ul>
+                    {["BANK_STATEMENT", "FINANCIAL_REPORT"]
+                      .filter((t) => !app.documents.some((d) => d.type === t))
+                      .map((t) => (
+                        <li key={t}>
+                          {t === "BANK_STATEMENT"
+                            ? "Выписка по счёту"
+                            : "Финансовый отчёт"}
+                        </li>
+                      ))}
+                  </ul>
+                )}
+                {["DRAFT", "NEEDS_INFO"].includes(app.status) ? (
+                  <Button asChild>
+                    <NavLink href={`/applications/${id}/edit`}>
+                      {app.status === "DRAFT"
+                        ? "Продолжить заполнение"
+                        : "Добавить документы"}
+                      <ArrowRight size={17} className="nudge" />
+                    </NavLink>
+                  </Button>
+                ) : (
+                  <Button
+                    disabled={busy}
+                    aria-busy={busy || undefined}
+                    onClick={() => action("reopen")}
+                  >
+                    {busy ? <Spinner /> : <Pencil size={17} />} Вернуться к
+                    редактированию
+                  </Button>
+                )}
+              </section>
+            )}
+          </div>
+          <section className="panel" style={stage(1)}>
             <h2>Параметры заявки</h2>
             <p className="purpose-text">
               {app.purpose || "Цель пока не указана"}
@@ -277,15 +297,21 @@ export function ApplicationDetail({ id }: { id: string }) {
               </div>
             </dl>
           </section>
-          <section className="panel">
+          <section className="panel" style={stage(2)}>
             <h2>
               Документы{" "}
-              <span className="count-pill">{app.documents.length}/2</span>
+              <span
+                className={`count-pill ${app.documents.length ? "pop" : ""}`}
+                key={`docs-${app.documents.length}`}
+              >
+                {app.documents.length}/2
+              </span>
             </h2>
             {app.documents.length ? (
-              app.documents.map((doc) => (
+              app.documents.map((doc, i) => (
                 <a
                   key={doc.id}
+                  style={stage(i, 60)}
                   href={`/api/v1/documents/${doc.id}`}
                   className="document-row"
                   download
@@ -310,17 +336,18 @@ export function ApplicationDetail({ id }: { id: string }) {
           </section>
         </div>
         <aside>
-          <section className="panel timeline-panel">
+          <section className="panel timeline-panel" style={stage(1)}>
             <h2>История заявки</h2>
             <p className="muted">Каждый шаг сохранён · МСК</p>
             <ol className="timeline">
               {app.events
                 .slice()
                 .reverse()
-                .map((e) => (
-                  <li key={e.id}>
+                .map((e, i) => (
+                  <li key={e.id} style={stage(i, 35)}>
                     <span
                       className={`timeline-dot ${e.actor === "SYSTEM" ? "system" : ""}`}
+                      style={stage(i, 35)}
                     />
                     <small>
                       {date(e.createdAt)} ·{" "}
@@ -332,7 +359,7 @@ export function ApplicationDetail({ id }: { id: string }) {
             </ol>
           </section>
           {app.latestEvaluation && (
-            <section className="panel">
+            <section className="panel" style={stage(2)}>
               <h3>Последняя проверка</h3>
               <p className="fine-print">
                 Редакция {app.latestEvaluation.inputVersion} ·{" "}
@@ -340,8 +367,12 @@ export function ApplicationDetail({ id }: { id: string }) {
                   ? "Исторический результат, не актуальное решение"
                   : app.latestEvaluation.policyVersion}
               </p>
-              {app.latestEvaluation.checks.map((c) => (
-                <div key={c.type} className="check-row">
+              {app.latestEvaluation.checks.map((c, i) => (
+                <div
+                  key={c.type}
+                  className="check-row rise"
+                  style={stage(i, 50)}
+                >
                   <span>
                     {
                       (
